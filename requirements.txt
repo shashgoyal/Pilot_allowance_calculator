@@ -1,0 +1,20 @@
+# Pilot Allowance Calculator Dependencies
+
+# Core dependencies
+pdfplumber>=0.10.0    # For reading PDF files (ScheduleReport.pdf & JarfclrpReport.pdf)
+xlrd>=2.0.1           # For reading legacy XLS logbook files (optional, backwards compatible)
+
+# API dependencies
+fastapi>=0.100.0      # Web framework for the API
+uvicorn>=0.23.0       # ASGI server to run FastAPI
+python-multipart>=0.0.6  # For file uploads in FastAPI
+
+# Installation:
+#   pip install -r requirements.txt
+#
+# Run API:
+#   python3 -m uvicorn pilot_allowance.api:app --reload
+#   or: python3 run_api.py
+#
+# Run CLI:
+#   python3 -m pilot_allowance ScheduleReport.pdf JarfclrpReport.pdf
