@@ -18,7 +18,7 @@ See the 'pilot_allowance' directory for the organized code:
 
 Usage:
     python pilot_allowance_calculator.py [ScheduleReport.pdf] [JarfclrpReport.xls]
-    
+
     or use the module directly:
     python -m pilot_allowance [ScheduleReport.pdf] [JarfclrpReport.xls]
 

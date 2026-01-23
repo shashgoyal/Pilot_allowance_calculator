@@ -16,7 +16,8 @@ A comprehensive tool for calculating pilot allowances based on schedule and logb
   - 💺 **Deadhead** - Non-operating flight time
   - 🌙 **Night Flying** - Flight time between 00:00-06:00 IST
 - **REST API** with FastAPI and automatic documentation
-- **Modern Web UI** with drag-and-drop file upload
+- **Modern Web UI** with drag-and-drop file upload (Vanilla JS & Vue.js versions)
+- **Interactive Filtering** - Click on allowance cards to filter the breakdown table
 - **CLI Support** for quick calculations
 
 ## 🚀 Quick Start
@@ -52,18 +53,30 @@ A comprehensive tool for calculating pilot allowances based on schedule and logb
    python3 -m uvicorn pilot_allowance.api:app --port 8043 --reload
    ```
 
-2. **Open the UI**
+2. **Open the UI** (choose one):
+   
+   **Vanilla JS version:**
    ```bash
    open ui/index.html
    ```
-   Or simply open `ui/index.html` in your browser.
+   
+   **Vue.js version:**
+   ```bash
+   open ui-vue/index-cdn.html
+   ```
 
 3. **Upload your files**
    - Drag & drop your `ScheduleReport.pdf` (required)
    - Optionally add your `JarfclrpReport.pdf` for accurate calculations
    - Click "Calculate Allowances"
 
-> **Note**: If using a different port, update the `API_URL` in `ui/index.html` (line 606)
+4. **Filter Results**
+   - Click on any allowance card to filter the table by that type
+   - Click multiple cards to show multiple types
+   - Click again to remove the filter
+   - Use "Clear All" to reset filters
+
+> **Note**: If using a different port, update the `API_URL` variable in the HTML file
 
 ### Option 2: Command Line Interface
 
@@ -121,7 +134,16 @@ pilot-allowance-calculator/
 │   ├── main.py              # Core processing logic
 │   └── report.py            # Report generation
 ├── ui/
-│   └── index.html           # Web UI (single-page app)
+│   └── index.html           # Web UI (Vanilla JS)
+├── ui-vue/
+│   ├── index-cdn.html       # Web UI (Vue.js CDN - no build required)
+│   ├── index.html           # Vue.js Vite entry point
+│   ├── package.json         # Node.js dependencies
+│   ├── vite.config.js       # Vite configuration
+│   └── src/                 # Vue.js source files
+│       ├── main.js
+│       ├── App.vue
+│       └── components/      # Vue components
 ├── calculate_allowance.py   # Quick CLI script
 ├── pilot_allowance_calculator.py  # Alternative CLI script
 ├── run_api.py               # API server launcher
@@ -162,18 +184,37 @@ Allowance rates are configured in `pilot_allowance/constants.py`. Rates differ b
 
 - 🎨 Modern dark theme with smooth animations
 - 📁 Drag-and-drop file upload
-- 👨‍✈️ Pilot info display
-- 📊 Summary statistics dashboard
-- 💳 Allowance breakdown cards
-- 📅 Date-wise breakdown table with filtering
-- 📱 Responsive design
+- 👨‍✈️ Pilot info display with total allowance
+- 📊 Summary statistics dashboard (block hours, flights, layovers, etc.)
+- 💳 **Clickable allowance cards** - Click to filter the table by type
+- 🔍 **Multi-select filtering** - Select multiple allowance types at once
+- 🏷️ **Active filter badges** - Visual indicators of selected filters
+- 📅 Date-wise breakdown table grouped by date
+- 🔎 Text search filter for dates and descriptions
+- 📱 Fully responsive design
+
+### UI Versions
+
+| Version | File | Requirements |
+|---------|------|--------------|
+| Vanilla JS | `ui/index.html` | None - just open in browser |
+| Vue.js (CDN) | `ui-vue/index-cdn.html` | None - just open in browser |
+| Vue.js (Vite) | `ui-vue/` | Node.js + npm install |
 
 ## 🛠️ Development
 
-### Running in development mode
+### Running API in development mode
 ```bash
 python3 -m uvicorn pilot_allowance.api:app --reload --port 8000
 ```
+
+### Running Vue.js UI with Vite (optional)
+```bash
+cd ui-vue
+npm install
+npm run dev
+```
+This starts a development server with hot-reload at `http://localhost:5173`
 
 ### Running tests
 ```bash
