@@ -472,6 +472,80 @@
         .allowance-card:hover {
             transform: translateY(-4px);
             box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+        }
+
+        .allowance-card.selected {
+            transform: translateY(-4px);
+            box-shadow: 0 0 0 3px currentColor;
+        }
+
+        .allowance-card.tail-swap.selected { box-shadow: 0 0 0 3px var(--accent-cyan); }
+        .allowance-card.transit.selected { box-shadow: 0 0 0 3px var(--accent-emerald); }
+        .allowance-card.layover.selected { box-shadow: 0 0 0 3px var(--accent-violet); }
+        .allowance-card.deadhead.selected { box-shadow: 0 0 0 3px var(--accent-amber); }
+        .allowance-card.night.selected { box-shadow: 0 0 0 3px var(--accent-rose); }
+
+        .allowance-card .filter-hint {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .allowance-card:hover .filter-hint {
+            opacity: 1;
+        }
+
+        .allowance-card.selected .filter-hint {
+            opacity: 1;
+            color: var(--success);
+        }
+
+        .active-filters {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-left: 16px;
+        }
+
+        .active-filter-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .active-filter-badge:hover {
+            opacity: 0.8;
+        }
+
+        .active-filter-badge.tail-swap { background: rgba(6, 182, 212, 0.2); color: var(--accent-cyan); }
+        .active-filter-badge.transit { background: rgba(16, 185, 129, 0.2); color: var(--accent-emerald); }
+        .active-filter-badge.layover { background: rgba(139, 92, 246, 0.2); color: var(--accent-violet); }
+        .active-filter-badge.deadhead { background: rgba(245, 158, 11, 0.2); color: var(--accent-amber); }
+        .active-filter-badge.night { background: rgba(244, 63, 94, 0.2); color: var(--accent-rose); }
+
+        .clear-filters-btn {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--error);
+            border: none;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .clear-filters-btn:hover {
+            background: rgba(239, 68, 68, 0.25);
         }
 
         .allowance-icon {
@@ -791,7 +865,7 @@
             <!-- Date-wise Table -->
             <div class="table-section">
                 <div class="table-header">
-                    <h3>📅 Date-wise Breakdown</h3>
+                    <h3>📅 Date-wise Breakdown <span class="active-filters" id="active-filters"></span></h3>
                     <input type="text" class="filter-input" id="date-filter" placeholder="Filter by date (DD/MM)">
                 </div>
                 <div class="table-container">
@@ -833,6 +907,7 @@
         let scheduleFile = null;
         let logbookFile = null;
         let allDetails = [];
+        let selectedTypes = new Set(); // Track selected allowance type filters
 
         // Initialize dropzones
         function setupDropzone(dropzone, input, type) {
@@ -983,37 +1058,46 @@
             const allowances = data.allowances;
             const allowanceSummary = document.getElementById('allowance-summary');
             allowanceSummary.innerHTML = `
-                <div class="allowance-card tail-swap">
+                <div class="allowance-card tail-swap" data-type="tail-swap" onclick="toggleTypeFilter('tail-swap')">
                     <div class="allowance-icon">🔄</div>
                     <div class="allowance-name">Tail Swap</div>
                     <div class="allowance-amount">${formatCurrency(allowances.tail_swap.amount)}</div>
                     <div class="allowance-detail">${allowances.tail_swap.count} swaps × ${formatCurrency(allowances.tail_swap.rate)}</div>
+                    <div class="filter-hint">Click to filter</div>
                 </div>
-                <div class="allowance-card transit">
+                <div class="allowance-card transit" data-type="transit" onclick="toggleTypeFilter('transit')">
                     <div class="allowance-icon">⏱️</div>
                     <div class="allowance-name">Transit</div>
                     <div class="allowance-amount">${formatCurrency(allowances.transit.amount)}</div>
                     <div class="allowance-detail">${allowances.transit.hours.toFixed(1)}h × ${formatCurrency(allowances.transit.rate)}/h</div>
+                    <div class="filter-hint">Click to filter</div>
                 </div>
-                <div class="allowance-card layover">
+                <div class="allowance-card layover" data-type="layover" onclick="toggleTypeFilter('layover')">
                     <div class="allowance-icon">🏨</div>
                     <div class="allowance-name">Layover</div>
                     <div class="allowance-amount">${formatCurrency(allowances.layover.total)}</div>
                     <div class="allowance-detail">${allowances.layover.count} layovers + ${allowances.layover.extra_hours.toFixed(1)}h extra</div>
+                    <div class="filter-hint">Click to filter</div>
                 </div>
-                <div class="allowance-card deadhead">
+                <div class="allowance-card deadhead" data-type="deadhead" onclick="toggleTypeFilter('deadhead')">
                     <div class="allowance-icon">💺</div>
                     <div class="allowance-name">Deadhead</div>
                     <div class="allowance-amount">${formatCurrency(allowances.deadhead.amount)}</div>
                     <div class="allowance-detail">${allowances.deadhead.hours.toFixed(1)}h × ${formatCurrency(allowances.deadhead.rate)}/h</div>
+                    <div class="filter-hint">Click to filter</div>
                 </div>
-                <div class="allowance-card night">
+                <div class="allowance-card night" data-type="night" onclick="toggleTypeFilter('night')">
                     <div class="allowance-icon">🌙</div>
                     <div class="allowance-name">Night Flying</div>
                     <div class="allowance-amount">${formatCurrency(allowances.night.amount)}</div>
                     <div class="allowance-detail">${allowances.night.hours.toFixed(1)}h × ${formatCurrency(allowances.night.rate)}/h</div>
+                    <div class="filter-hint">Click to filter</div>
                 </div>
             `;
+            
+            // Reset type filters when new data is loaded
+            selectedTypes.clear();
+            updateActiveFilters();
 
             // Collect all details with type
             allDetails = [];
@@ -1102,15 +1186,91 @@
             tbody.innerHTML = html;
         }
 
-        // Filter functionality
-        document.getElementById('date-filter').addEventListener('input', (e) => {
-            const filter = e.target.value.toLowerCase();
-            const filtered = allDetails.filter(d => 
-                d.date.toLowerCase().includes(filter) ||
-                d.typeName.toLowerCase().includes(filter) ||
-                d.description.toLowerCase().includes(filter)
-            );
+        // Type filter toggle function
+        function toggleTypeFilter(type) {
+            if (selectedTypes.has(type)) {
+                selectedTypes.delete(type);
+            } else {
+                selectedTypes.add(type);
+            }
+            
+            // Update card visual state
+            document.querySelectorAll('.allowance-card').forEach(card => {
+                const cardType = card.dataset.type;
+                if (selectedTypes.has(cardType)) {
+                    card.classList.add('selected');
+                    card.querySelector('.filter-hint').textContent = '✓ Filtering';
+                } else {
+                    card.classList.remove('selected');
+                    card.querySelector('.filter-hint').textContent = 'Click to filter';
+                }
+            });
+            
+            updateActiveFilters();
+            applyFilters();
+        }
+
+        // Update active filters display
+        function updateActiveFilters() {
+            const container = document.getElementById('active-filters');
+            const typeNames = {
+                'tail-swap': 'Tail Swap',
+                'transit': 'Transit',
+                'layover': 'Layover',
+                'deadhead': 'Deadhead',
+                'night': 'Night'
+            };
+            
+            if (selectedTypes.size === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            let html = '';
+            selectedTypes.forEach(type => {
+                html += `<span class="active-filter-badge ${type}" onclick="toggleTypeFilter('${type}')">${typeNames[type]} ✕</span>`;
+            });
+            html += `<button class="clear-filters-btn" onclick="clearAllFilters()">Clear All</button>`;
+            container.innerHTML = html;
+        }
+
+        // Clear all type filters
+        function clearAllFilters() {
+            selectedTypes.clear();
+            document.querySelectorAll('.allowance-card').forEach(card => {
+                card.classList.remove('selected');
+                card.querySelector('.filter-hint').textContent = 'Click to filter';
+            });
+            updateActiveFilters();
+            applyFilters();
+        }
+
+        // Apply all filters (text + type)
+        function applyFilters() {
+            const textFilter = document.getElementById('date-filter').value.toLowerCase();
+            
+            let filtered = allDetails;
+            
+            // Apply type filter if any types are selected
+            if (selectedTypes.size > 0) {
+                filtered = filtered.filter(d => selectedTypes.has(d.type));
+            }
+            
+            // Apply text filter
+            if (textFilter) {
+                filtered = filtered.filter(d => 
+                    d.date.toLowerCase().includes(textFilter) ||
+                    d.typeName.toLowerCase().includes(textFilter) ||
+                    d.description.toLowerCase().includes(textFilter)
+                );
+            }
+            
             renderTable(filtered);
+        }
+
+        // Filter functionality
+        document.getElementById('date-filter').addEventListener('input', () => {
+            applyFilters();
         });
 
         // Initialize

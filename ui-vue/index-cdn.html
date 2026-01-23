@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pilot Allowance Calculator - Vue.js</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    :root {
+      --bg-primary: #0a0f1c;
+      --bg-secondary: #111827;
+      --bg-card: #1a2234;
+      --bg-hover: #243049;
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --accent-violet: #8b5cf6;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --border-color: #334155;
+      --success: #22c55e;
+      --error: #ef4444;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    [v-cloak] { display: none; }
+
+    .bg-pattern {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+      background: 
+        radial-gradient(ellipse at 20% 20%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(16, 185, 129, 0.04) 0%, transparent 50%);
+    }
+
+    .grid-lines {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+      background-image: 
+        linear-gradient(rgba(51, 65, 85, 0.15) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(51, 65, 85, 0.15) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 48px;
+      animation: fadeInDown 0.6s ease-out;
+    }
+
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-8px); }
+      75% { transform: translateX(8px); }
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+
+    .logo-icon {
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-emerald));
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      box-shadow: 0 8px 32px rgba(6, 182, 212, 0.3);
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--text-primary), var(--accent-cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+      font-weight: 300;
+    }
+
+    .vue-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(66, 184, 131, 0.15);
+      color: #42b883;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-top: 8px;
+    }
+
+    .upload-section {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+      animation: fadeInUp 0.6s ease-out 0.2s both;
+    }
+
+    .upload-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 32px;
+      transition: all 0.3s ease;
+    }
+
+    .upload-card:hover {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 40px rgba(6, 182, 212, 0.1);
+    }
+
+    .upload-card.required { border-left: 4px solid var(--accent-cyan); }
+    .upload-card.optional { border-left: 4px solid var(--accent-violet); }
+
+    .upload-label {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .upload-label h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge.required {
+      background: rgba(6, 182, 212, 0.15);
+      color: var(--accent-cyan);
+    }
+
+    .badge.optional {
+      background: rgba(139, 92, 246, 0.15);
+      color: var(--accent-violet);
+    }
+
+    .dropzone {
+      border: 2px dashed var(--border-color);
+      border-radius: 16px;
+      padding: 40px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: rgba(17, 24, 39, 0.5);
+    }
+
+    .dropzone:hover, .dropzone.dragover {
+      border-color: var(--accent-cyan);
+      background: rgba(6, 182, 212, 0.05);
+    }
+
+    .dropzone.has-file {
+      border-color: var(--success);
+      background: rgba(34, 197, 94, 0.05);
+    }
+
+    .dropzone-icon { font-size: 40px; margin-bottom: 12px; }
+    .dropzone p { color: var(--text-secondary); font-size: 0.95rem; }
+
+    .file-name {
+      color: var(--success);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      margin-top: 8px;
+      word-break: break-all;
+    }
+
+    input[type="file"] { display: none; }
+
+    .action-section {
+      text-align: center;
+      margin-bottom: 48px;
+      animation: fadeInUp 0.6s ease-out 0.4s both;
+    }
+
+    .error-message {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid var(--error);
+      border-radius: 12px;
+      padding: 16px 24px;
+      color: var(--error);
+      margin-bottom: 24px;
+      animation: shake 0.4s ease;
+    }
+
+    .calculate-btn {
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-emerald));
+      color: var(--bg-primary);
+      border: none;
+      padding: 18px 48px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      font-family: 'Outfit', sans-serif;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 32px rgba(6, 182, 212, 0.3);
+    }
+
+    .calculate-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(6, 182, 212, 0.4);
+    }
+
+    .calculate-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .calculate-btn.loading { position: relative; color: transparent; }
+
+    .calculate-btn.loading::after {
+      content: '';
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      top: 50%;
+      left: 50%;
+      margin: -12px 0 0 -12px;
+      border: 3px solid rgba(10, 15, 28, 0.3);
+      border-top-color: var(--bg-primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .results-section { animation: fadeInUp 0.6s ease-out; }
+
+    .pilot-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 32px;
+      margin-bottom: 32px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 32px;
+      align-items: center;
+    }
+
+    .pilot-avatar {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+    }
+
+    .pilot-details h2 { font-size: 1.75rem; font-weight: 600; margin-bottom: 8px; }
+
+    .pilot-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      color: var(--text-secondary);
+    }
+
+    .pilot-meta span {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.95rem;
+    }
+
+    .total-card {
+      background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan));
+      border-radius: 16px;
+      padding: 20px 32px;
+      text-align: center;
+      min-width: 180px;
+    }
+
+    .total-label { font-size: 0.85rem; font-weight: 500; color: rgba(10, 15, 28, 0.7); margin-bottom: 4px; }
+    .total-amount { font-size: 1.75rem; font-weight: 700; color: var(--bg-primary); font-family: 'JetBrains Mono', monospace; }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 20px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .stat-card:hover { border-color: var(--accent-cyan); transform: translateY(-2px); }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-emerald));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .allowance-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .allowance-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .allowance-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; }
+    .allowance-card.tail-swap::before { background: var(--accent-cyan); }
+    .allowance-card.transit::before { background: var(--accent-emerald); }
+    .allowance-card.layover::before { background: var(--accent-violet); }
+    .allowance-card.deadhead::before { background: var(--accent-amber); }
+    .allowance-card.night::before { background: var(--accent-rose); }
+
+    .allowance-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2); cursor: pointer; }
+
+    .allowance-card.selected { transform: translateY(-4px); }
+    .allowance-card.tail-swap.selected { box-shadow: 0 0 0 3px var(--accent-cyan); }
+    .allowance-card.transit.selected { box-shadow: 0 0 0 3px var(--accent-emerald); }
+    .allowance-card.layover.selected { box-shadow: 0 0 0 3px var(--accent-violet); }
+    .allowance-card.deadhead.selected { box-shadow: 0 0 0 3px var(--accent-amber); }
+    .allowance-card.night.selected { box-shadow: 0 0 0 3px var(--accent-rose); }
+
+    .filter-hint {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 8px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .allowance-card:hover .filter-hint { opacity: 1; }
+    .allowance-card.selected .filter-hint { opacity: 1; color: var(--success); }
+
+    .active-filters {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-left: 16px;
+    }
+
+    .active-filter-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .active-filter-badge:hover { opacity: 0.8; }
+    .active-filter-badge.tail-swap { background: rgba(6, 182, 212, 0.2); color: var(--accent-cyan); }
+    .active-filter-badge.transit { background: rgba(16, 185, 129, 0.2); color: var(--accent-emerald); }
+    .active-filter-badge.layover { background: rgba(139, 92, 246, 0.2); color: var(--accent-violet); }
+    .active-filter-badge.deadhead { background: rgba(245, 158, 11, 0.2); color: var(--accent-amber); }
+    .active-filter-badge.night { background: rgba(244, 63, 94, 0.2); color: var(--accent-rose); }
+
+    .clear-filters-btn {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--error);
+      border: none;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .clear-filters-btn:hover { background: rgba(239, 68, 68, 0.25); }
+
+    .allowance-icon { font-size: 28px; margin-bottom: 12px; }
+    .allowance-name { font-size: 1rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px; }
+    .allowance-amount { font-size: 1.5rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+
+    .allowance-card.tail-swap .allowance-amount { color: var(--accent-cyan); }
+    .allowance-card.transit .allowance-amount { color: var(--accent-emerald); }
+    .allowance-card.layover .allowance-amount { color: var(--accent-violet); }
+    .allowance-card.deadhead .allowance-amount { color: var(--accent-amber); }
+    .allowance-card.night .allowance-amount { color: var(--accent-rose); }
+
+    .allowance-detail { font-size: 0.85rem; color: var(--text-muted); margin-top: 8px; font-family: 'JetBrains Mono', monospace; }
+
+    .table-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .table-header {
+      background: var(--bg-secondary);
+      padding: 24px 32px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .table-header h3 { font-size: 1.25rem; font-weight: 600; display: flex; align-items: center; gap: 12px; }
+
+    .filter-input {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 10px 16px;
+      color: var(--text-primary);
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+    }
+
+    .filter-input:focus { outline: none; border-color: var(--accent-cyan); box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1); }
+
+    .table-container { overflow-x: auto; }
+
+    table { width: 100%; border-collapse: collapse; }
+
+    th {
+      background: var(--bg-secondary);
+      padding: 16px 20px;
+      text-align: left;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border-color);
+      white-space: nowrap;
+    }
+
+    td { padding: 16px 20px; border-bottom: 1px solid var(--border-color); font-size: 0.95rem; }
+    tr:hover td { background: var(--bg-hover); }
+
+    .date-cell { font-family: 'JetBrains Mono', monospace; font-weight: 500; color: var(--accent-cyan); white-space: nowrap; }
+    .description-cell { color: var(--text-secondary); max-width: 300px; }
+
+    .type-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .type-badge.tail-swap { background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); }
+    .type-badge.transit { background: rgba(16, 185, 129, 0.15); color: var(--accent-emerald); }
+    .type-badge.layover { background: rgba(139, 92, 246, 0.15); color: var(--accent-violet); }
+    .type-badge.deadhead { background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); }
+    .type-badge.night { background: rgba(244, 63, 94, 0.15); color: var(--accent-rose); }
+
+    .empty-state { text-align: center; padding: 60px 24px; color: var(--text-muted); }
+    .empty-state-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+
+    .date-group-row td {
+      background: var(--bg-secondary);
+      padding: 12px 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+      border-bottom: 2px solid var(--accent-cyan);
+    }
+
+    footer { text-align: center; padding: 40px 24px; color: var(--text-muted); font-size: 0.85rem; }
+    footer a { color: var(--accent-cyan); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 768px) {
+      .container { padding: 24px 16px; }
+      h1 { font-size: 1.75rem; }
+      .pilot-card { grid-template-columns: 1fr; text-align: center; }
+      .pilot-avatar { margin: 0 auto; }
+      .pilot-meta { justify-content: center; }
+      .total-card { margin: 0 auto; }
+      .table-header { flex-direction: column; gap: 16px; }
+      .filter-input { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" v-cloak>
+    <div class="bg-pattern"></div>
+    <div class="grid-lines"></div>
+
+    <div class="container">
+      <!-- Header -->
+      <header>
+        <div class="logo">
+          <div class="logo-icon">✈️</div>
+          <h1>Pilot Allowance Calculator</h1>
+        </div>
+        <p class="subtitle">Upload your schedule files to calculate allowances</p>
+        <div class="vue-badge">
+          <svg width="16" height="16" viewBox="0 0 256 221" fill="currentColor">
+            <path d="M204.8 0H256L128 220.8L0 0h97.92L128 51.2L157.44 0h47.36z"/>
+            <path d="M0 0l128 220.8L256 0h-51.2L128 132.48L51.2 0H0z" fill-opacity=".5"/>
+          </svg>
+          Built with Vue.js
+        </div>
+      </header>
+
+      <!-- Upload Section -->
+      <section class="upload-section">
+        <!-- Schedule Upload -->
+        <div class="upload-card required">
+          <div class="upload-label">
+            <h3>📄 Schedule Report</h3>
+            <span class="badge required">Required</span>
+          </div>
+          <div 
+            class="dropzone"
+            :class="{ dragover: scheduleDragging, 'has-file': scheduleFile }"
+            @click="$refs.scheduleInput.click()"
+            @dragover.prevent="scheduleDragging = true"
+            @dragleave="scheduleDragging = false"
+            @drop.prevent="handleScheduleDrop"
+          >
+            <template v-if="scheduleFile">
+              <div class="dropzone-icon">✅</div>
+              <p>File selected:</p>
+              <div class="file-name">{{ scheduleFile.name }}</div>
+            </template>
+            <template v-else>
+              <div class="dropzone-icon">📁</div>
+              <p>Drag & drop your ScheduleReport.pdf<br>or click to browse</p>
+            </template>
+            <input ref="scheduleInput" type="file" accept=".pdf" @change="handleScheduleSelect">
+          </div>
+        </div>
+
+        <!-- Logbook Upload -->
+        <div class="upload-card optional">
+          <div class="upload-label">
+            <h3>📋 Logbook Report</h3>
+            <span class="badge optional">Optional</span>
+          </div>
+          <div 
+            class="dropzone"
+            :class="{ dragover: logbookDragging, 'has-file': logbookFile }"
+            @click="$refs.logbookInput.click()"
+            @dragover.prevent="logbookDragging = true"
+            @dragleave="logbookDragging = false"
+            @drop.prevent="handleLogbookDrop"
+          >
+            <template v-if="logbookFile">
+              <div class="dropzone-icon">✅</div>
+              <p>File selected:</p>
+              <div class="file-name">{{ logbookFile.name }}</div>
+            </template>
+            <template v-else>
+              <div class="dropzone-icon">📁</div>
+              <p>Drag & drop your JarfclrpReport.pdf<br>or click to browse</p>
+            </template>
+            <input ref="logbookInput" type="file" accept=".pdf,.xls" @change="handleLogbookSelect">
+          </div>
+        </div>
+      </section>
+
+      <!-- Action Section -->
+      <section class="action-section">
+        <div v-if="error" class="error-message">{{ error }}</div>
+        <button 
+          class="calculate-btn"
+          :class="{ loading: isLoading }"
+          :disabled="!scheduleFile || isLoading"
+          @click="calculateAllowances"
+        >
+          Calculate Allowances
+        </button>
+      </section>
+
+      <!-- Results Section -->
+      <section v-if="result" class="results-section">
+        <!-- Pilot Card -->
+        <div class="pilot-card">
+          <div class="pilot-avatar">👨‍✈️</div>
+          <div class="pilot-details">
+            <h2>{{ result.pilot_info.name }}</h2>
+            <div class="pilot-meta">
+              <span>🪪 {{ result.pilot_info.employee_id }}</span>
+              <span>🎖️ {{ result.pilot_info.rank_full }}</span>
+              <span>🏠 {{ result.pilot_info.base }}</span>
+              <span>🛩️ {{ result.pilot_info.aircraft_type }}</span>
+            </div>
+          </div>
+          <div class="total-card">
+            <div class="total-label">Total Allowance</div>
+            <div class="total-amount">{{ formatCurrency(result.allowances.total_amount) }}</div>
+          </div>
+        </div>
+
+        <!-- Summary Stats -->
+        <div class="summary-grid">
+          <div class="stat-card">
+            <div class="stat-value">{{ result.summary.block_hours || '0:00' }}</div>
+            <div class="stat-label">Block Hours</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">{{ result.summary.duty_hours || '0:00' }}</div>
+            <div class="stat-label">Duty Hours</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">{{ result.summary.operating_flights }}</div>
+            <div class="stat-label">Operating Flights</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">{{ result.summary.deadhead_flights }}</div>
+            <div class="stat-label">Deadhead Flights</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">{{ result.summary.layover_count }}</div>
+            <div class="stat-label">Layovers</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">{{ result.summary.flight_days || '0' }}</div>
+            <div class="stat-label">Flight Days</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">{{ result.summary.off_days || '0' }}</div>
+            <div class="stat-label">Off Days</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">{{ result.summary.standby_days || '0' }}</div>
+            <div class="stat-label">Standby Days</div>
+          </div>
+        </div>
+
+        <!-- Allowance Cards -->
+        <div class="allowance-summary">
+          <div class="allowance-card tail-swap" :class="{ selected: selectedTypes.has('tail-swap') }" @click="toggleTypeFilter('tail-swap')">
+            <div class="allowance-icon">🔄</div>
+            <div class="allowance-name">Tail Swap</div>
+            <div class="allowance-amount">{{ formatCurrency(result.allowances.tail_swap.amount) }}</div>
+            <div class="allowance-detail">{{ result.allowances.tail_swap.count }} swaps × {{ formatCurrency(result.allowances.tail_swap.rate) }}</div>
+            <div class="filter-hint">{{ selectedTypes.has('tail-swap') ? '✓ Filtering' : 'Click to filter' }}</div>
+          </div>
+          <div class="allowance-card transit" :class="{ selected: selectedTypes.has('transit') }" @click="toggleTypeFilter('transit')">
+            <div class="allowance-icon">⏱️</div>
+            <div class="allowance-name">Transit</div>
+            <div class="allowance-amount">{{ formatCurrency(result.allowances.transit.amount) }}</div>
+            <div class="allowance-detail">{{ result.allowances.transit.hours.toFixed(1) }}h × {{ formatCurrency(result.allowances.transit.rate) }}/h</div>
+            <div class="filter-hint">{{ selectedTypes.has('transit') ? '✓ Filtering' : 'Click to filter' }}</div>
+          </div>
+          <div class="allowance-card layover" :class="{ selected: selectedTypes.has('layover') }" @click="toggleTypeFilter('layover')">
+            <div class="allowance-icon">🏨</div>
+            <div class="allowance-name">Layover</div>
+            <div class="allowance-amount">{{ formatCurrency(result.allowances.layover.total) }}</div>
+            <div class="allowance-detail">{{ result.allowances.layover.count }} layovers + {{ result.allowances.layover.extra_hours.toFixed(1) }}h extra</div>
+            <div class="filter-hint">{{ selectedTypes.has('layover') ? '✓ Filtering' : 'Click to filter' }}</div>
+          </div>
+          <div class="allowance-card deadhead" :class="{ selected: selectedTypes.has('deadhead') }" @click="toggleTypeFilter('deadhead')">
+            <div class="allowance-icon">💺</div>
+            <div class="allowance-name">Deadhead</div>
+            <div class="allowance-amount">{{ formatCurrency(result.allowances.deadhead.amount) }}</div>
+            <div class="allowance-detail">{{ result.allowances.deadhead.hours.toFixed(1) }}h × {{ formatCurrency(result.allowances.deadhead.rate) }}/h</div>
+            <div class="filter-hint">{{ selectedTypes.has('deadhead') ? '✓ Filtering' : 'Click to filter' }}</div>
+          </div>
+          <div class="allowance-card night" :class="{ selected: selectedTypes.has('night') }" @click="toggleTypeFilter('night')">
+            <div class="allowance-icon">🌙</div>
+            <div class="allowance-name">Night Flying</div>
+            <div class="allowance-amount">{{ formatCurrency(result.allowances.night.amount) }}</div>
+            <div class="allowance-detail">{{ result.allowances.night.hours.toFixed(1) }}h × {{ formatCurrency(result.allowances.night.rate) }}/h</div>
+            <div class="filter-hint">{{ selectedTypes.has('night') ? '✓ Filtering' : 'Click to filter' }}</div>
+          </div>
+        </div>
+
+        <!-- Date-wise Table -->
+        <div class="table-section">
+          <div class="table-header">
+            <h3>
+              📅 Date-wise Breakdown
+              <span class="active-filters">
+                <span 
+                  v-for="type in Array.from(selectedTypes)" 
+                  :key="type" 
+                  class="active-filter-badge" 
+                  :class="type"
+                  @click="toggleTypeFilter(type)"
+                >
+                  {{ typeNames[type] }} ✕
+                </span>
+                <button v-if="selectedTypes.size > 0" class="clear-filters-btn" @click="clearAllFilters">Clear All</button>
+              </span>
+            </h3>
+            <input v-model="filter" type="text" class="filter-input" placeholder="Filter by date (DD/MM)">
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template v-if="Object.keys(groupedDetails).length === 0">
+                  <tr>
+                    <td colspan="3">
+                      <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <p>No allowance entries found</p>
+                      </div>
+                    </td>
+                  </tr>
+                </template>
+                <template v-else>
+                  <template v-for="(items, date) in groupedDetails" :key="date">
+                    <tr class="date-group-row">
+                      <td colspan="3">📅 {{ date }} ({{ items.length }} {{ items.length === 1 ? 'entry' : 'entries' }})</td>
+                    </tr>
+                    <tr v-for="(item, idx) in items" :key="`${date}-${idx}`">
+                      <td class="date-cell">{{ item.date }}</td>
+                      <td><span class="type-badge" :class="item.type">{{ item.typeName }}</span></td>
+                      <td class="description-cell">{{ item.description }}</td>
+                    </tr>
+                  </template>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <p>Pilot Allowance Calculator v1.0 | API runs on <a href="http://localhost:8043/docs" target="_blank">localhost:8043</a></p>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    const { createApp, ref, computed } = Vue
+
+    createApp({
+      setup() {
+        // Configuration
+        const API_URL = 'http://localhost:8043'
+
+        // State
+        const scheduleFile = ref(null)
+        const logbookFile = ref(null)
+        const scheduleDragging = ref(false)
+        const logbookDragging = ref(false)
+        const isLoading = ref(false)
+        const error = ref('')
+        const result = ref(null)
+        const filter = ref('')
+        const selectedTypes = ref(new Set())
+
+        // Type name mapping
+        const typeNames = {
+          'tail-swap': 'Tail Swap',
+          'transit': 'Transit',
+          'layover': 'Layover',
+          'deadhead': 'Deadhead',
+          'night': 'Night'
+        }
+
+        // File handlers
+        const handleScheduleDrop = (e) => {
+          scheduleDragging.value = false
+          const file = e.dataTransfer.files[0]
+          if (file) scheduleFile.value = file
+        }
+
+        const handleLogbookDrop = (e) => {
+          logbookDragging.value = false
+          const file = e.dataTransfer.files[0]
+          if (file) logbookFile.value = file
+        }
+
+        const handleScheduleSelect = (e) => {
+          const file = e.target.files[0]
+          if (file) scheduleFile.value = file
+        }
+
+        const handleLogbookSelect = (e) => {
+          const file = e.target.files[0]
+          if (file) logbookFile.value = file
+        }
+
+        // Format currency
+        const formatCurrency = (amount) => {
+          return '₹' + Math.round(amount).toLocaleString('en-IN')
+        }
+
+        // Toggle type filter
+        const toggleTypeFilter = (type) => {
+          const newSet = new Set(selectedTypes.value)
+          if (newSet.has(type)) {
+            newSet.delete(type)
+          } else {
+            newSet.add(type)
+          }
+          selectedTypes.value = newSet
+        }
+
+        // Clear all type filters
+        const clearAllFilters = () => {
+          selectedTypes.value = new Set()
+        }
+
+        // Calculate allowances
+        const calculateAllowances = async () => {
+          isLoading.value = true
+          error.value = ''
+          result.value = null
+
+          try {
+            const formData = new FormData()
+            formData.append('schedule_pdf', scheduleFile.value)
+            if (logbookFile.value) {
+              formData.append('logbook_pdf', logbookFile.value)
+            }
+
+            const response = await fetch(`${API_URL}/calculate`, {
+              method: 'POST',
+              body: formData
+            })
+
+            if (!response.ok) {
+              const errorData = await response.json()
+              throw new Error(errorData.detail || 'Failed to calculate allowances')
+            }
+
+            result.value = await response.json()
+          } catch (err) {
+            error.value = err.message
+          } finally {
+            isLoading.value = false
+          }
+        }
+
+        // Computed: all details
+        const allDetails = computed(() => {
+          if (!result.value) return []
+          
+          const details = []
+          const a = result.value.allowances
+
+          a.tail_swap.details.forEach(d => details.push({ ...d, type: 'tail-swap', typeName: 'Tail Swap' }))
+          a.transit.details.forEach(d => details.push({ ...d, type: 'transit', typeName: 'Transit' }))
+          a.layover.details.forEach(d => details.push({ ...d, type: 'layover', typeName: 'Layover' }))
+          a.deadhead.details.forEach(d => details.push({ ...d, type: 'deadhead', typeName: 'Deadhead' }))
+          a.night.details.forEach(d => details.push({ ...d, type: 'night', typeName: 'Night' }))
+
+          // Sort by date
+          details.sort((a, b) => {
+            const [dayA, monthA, yearA] = a.date.split('/').map(Number)
+            const [dayB, monthB, yearB] = b.date.split('/').map(Number)
+            const dateA = new Date(2000 + (yearA || 0), (monthA || 1) - 1, dayA || 1)
+            const dateB = new Date(2000 + (yearB || 0), (monthB || 1) - 1, dayB || 1)
+            return dateA - dateB
+          })
+
+          return details
+        })
+
+        // Computed: filtered details
+        const filteredDetails = computed(() => {
+          let filtered = allDetails.value
+
+          // Apply type filter if any types are selected
+          if (selectedTypes.value.size > 0) {
+            filtered = filtered.filter(d => selectedTypes.value.has(d.type))
+          }
+
+          // Apply text filter
+          if (filter.value) {
+            const f = filter.value.toLowerCase()
+            filtered = filtered.filter(d =>
+              d.date.toLowerCase().includes(f) ||
+              d.typeName.toLowerCase().includes(f) ||
+              d.description.toLowerCase().includes(f)
+            )
+          }
+
+          return filtered
+        })
+
+        // Computed: grouped by date
+        const groupedDetails = computed(() => {
+          const grouped = {}
+          filteredDetails.value.forEach(d => {
+            if (!grouped[d.date]) grouped[d.date] = []
+            grouped[d.date].push(d)
+          })
+          return grouped
+        })
+
+        return {
+          scheduleFile,
+          logbookFile,
+          scheduleDragging,
+          logbookDragging,
+          isLoading,
+          error,
+          result,
+          filter,
+          selectedTypes,
+          typeNames,
+          handleScheduleDrop,
+          handleLogbookDrop,
+          handleScheduleSelect,
+          handleLogbookSelect,
+          formatCurrency,
+          calculateAllowances,
+          toggleTypeFilter,
+          clearAllFilters,
+          groupedDetails
+        }
+      }
+    }).mount('#app')
+  </script>
+</body>
+</html>
+
